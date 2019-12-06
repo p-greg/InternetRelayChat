@@ -32,6 +32,11 @@ io.on("connection", function(socket) {
     }
   });
 
+  socket.on("newRoom", function(data) {
+    rooms.push(data.name);
+    io.sockets.emit("addRoom", { name: data.name });
+  });
+
   socket.on("msg", function(data) {
     io.sockets.emit("newmsg", data);
   });
