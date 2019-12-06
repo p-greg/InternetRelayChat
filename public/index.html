@@ -38,6 +38,11 @@
       display();
     });
 
+    socket.on("addRoom", function(data) {
+      rooms.push(data.name);
+      display();
+    });
+
     socket.on("newmsg", function(data) {
       if (user) {
         //clear input
@@ -126,9 +131,13 @@
       let createRoomSubmit = document.createElement("button");
       createRoomSubmit.type = "button";
       createRoomSubmit.name = "button";
+      //add submit text
+      let createRoomSubmitText = document.createTextNode("Create");
+      createRoomSubmit.appendChild(createRoomSubmitText);
       createRoomSubmit.onclick = function() {
         let roomName = document.getElementById("room-name").value;
-        rooms.push(roomName);
+        //emit create room message to server
+        socket.emit("newRoom", { name: roomName });
         display();
       };
       createRoomForm.appendChild(createRoomSubmit);
@@ -171,6 +180,9 @@
       let joinRoomEnter = document.createElement("button");
       joinRoomEnter.type = "button";
       joinRoomEnter.name = "button";
+      //create text for enter
+      let joinRoomEnterText = document.createTextNode("Join");
+      joinRoomEnter.appendChild(joinRoomEnterText);
       joinRoomEnter.onclick = function() {
         let val = document.getElementById("join-room-select").value;
         let thisChat = document.getElementById("chat-single-" + val);
@@ -183,6 +195,9 @@
       let joinRoomLeave = document.createElement("button");
       joinRoomLeave.type = "button";
       joinRoomLeave.name = "button";
+      //create text for leave
+      let joinRoomLeaveText = document.createTextNode("Leave");
+      joinRoomLeave.appendChild(joinRoomLeaveText);
       joinRoomLeave.onclick = function() {
         let val = document.getElementById("join-room-select").value;
         let thisChat = document.getElementById("chat-single-" + val);
@@ -198,6 +213,8 @@
     function displayUsernameInput() {
       //get the div
       let inputDiv = document.getElementById("username-input");
+      //clear div
+      inputDiv.innerHTML = "";
 
       //create Welcome header
       let welcomeDiv = document.createElement("div");
