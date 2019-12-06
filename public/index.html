@@ -9,6 +9,7 @@
     <div id="page-layout">
       <div id="left-sidebar"></div>
       <div id="page-content">
+        <div id="username-wrapper"></div>
         <div id="username-input"></div>
         <div id="lists"></div>
         <div id="chats-wrapper"></div>
@@ -20,7 +21,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io();
-    let rooms = ["My Chat", "Loser Chat"];
+    let rooms = [];
     var user;
 
     socket.on("userExists", function(data) {
@@ -28,7 +29,8 @@
     });
 
     socket.on("userSet", function(data) {
-      console.log(data.avaliableRooms);
+      console.log("rooms: " + data.avaliableRooms);
+      rooms = data.avaliableRooms;
       user = data.username;
       var userNameInput = document.getElementById("username-input");
       userNameInput.style.display = "none";
@@ -88,7 +90,6 @@
 
       //check if they have set the username
       if (user === undefined) {
-        console.log("display username input");
         let chatDiv = document.getElementById("chats-wrapper");
         displayUsernameInput();
       } else {
@@ -97,6 +98,8 @@
         inputDiv.innerHTML = "";
         let listDiv = document.getElementById("lists");
         listDiv.innerHTML = "";
+        document.getElementById("username-wrapper").innerHTML = "";
+        displayUsername();
         displayCreateRoom();
         displayAvaliableRooms();
         //create the chats from the rooms array
@@ -106,16 +109,29 @@
       }
     }
 
+    function displayUsername() {
+      let usernameWrapper = document.getElementById("username-wrapper");
+      let usernameH2 = document.createElement("h2");
+      let usernameText = document.createTextNode("User: " + user);
+      usernameH2.appendChild(usernameText);
+      usernameWrapper.appendChild(usernameH2);
+    }
+
     function displayCreateRoom() {
       //get lists div
       let listGrid = document.getElementById("lists");
       //create wrapper
-      let createRoomFormWrapper = document.createElement("div");
+      let createRoomFormOuter = document.createElement("div");
+      createRoomFormOuter.id = "create-room-form-outer";
       //create label
-      let chatRoomLabel = document.createElement("h2");
+      let chatRoomLabel = document.createElement("h3");
       let chatRoomLabelText = document.createTextNode("Create Room:");
       chatRoomLabel.appendChild(chatRoomLabelText);
-      createRoomFormWrapper.appendChild(chatRoomLabel);
+      createRoomFormOuter.appendChild(chatRoomLabel);
+
+      let createRoomFormWrap = document.createElement("div");
+      createRoomFormWrap.id = "create-room-form-wrap";
+
       //create form
       let createRoomForm = document.createElement("form");
       createRoomForm.id = "create-room-form";
@@ -141,8 +157,9 @@
         display();
       };
       createRoomForm.appendChild(createRoomSubmit);
-      createRoomFormWrapper.appendChild(createRoomForm);
-      listGrid.appendChild(createRoomFormWrapper);
+      createRoomFormWrap.appendChild(createRoomForm);
+      createRoomFormOuter.appendChild(createRoomFormWrap);
+      listGrid.appendChild(createRoomFormOuter);
     }
 
     function displayAvaliableRooms() {
@@ -151,7 +168,7 @@
       //wrap the form in a div
       let joinRoomFormWrapper = document.createElement("div");
       //create label
-      let chatRoomLabel = document.createElement("h2");
+      let chatRoomLabel = document.createElement("h3");
       let chatRoomLabelText = document.createTextNode("Rooms:");
       chatRoomLabel.appendChild(chatRoomLabelText);
       joinRoomFormWrapper.appendChild(chatRoomLabel);
