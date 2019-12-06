@@ -10,6 +10,7 @@
       <div id="left-sidebar"></div>
       <div id="page-content">
         <div id="username-input"></div>
+        <div id="lists"></div>
         <div id="chats-wrapper"></div>
       </div>
       <div id="right-sidebar"></div>
@@ -19,20 +20,21 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io();
-    let rooms = ["1", "2"];
+    let rooms = ["My Chat", "Loser Chat"];
     var user;
-    console.log(user);
 
     socket.on("userExists", function(data) {
       document.getElementById("error-wrapper").innerHTML = data;
     });
 
     socket.on("userSet", function(data) {
+      console.log(data.avaliableRooms);
       user = data.username;
       var userNameInput = document.getElementById("username-input");
       userNameInput.style.display = "none";
       var errorMessage = document.getElementById("error-wrapper");
       errorMessage.style.display = "none";
+
       display();
     });
 
@@ -57,12 +59,14 @@
         chatWrap.style.display = "inline-block";
 
         if (data.user === user) {
-          console.log("my message");
-          chatWrap.style.background = "#147efb";
+          //console.log("my message");
+          //set user message color
+          chatWrap.style.background = "#9EC1CF";
           box.style.textAlign = "right";
         } else {
-          console.log("someone else");
-          chatWrap.style.background = "#53d769";
+          //console.log("someone else");
+          //set everyone else's message color
+          chatWrap.style.background = "#9EE09E";
         }
 
         temp.appendChild(chatText);
@@ -76,21 +80,119 @@
 
     function display() {
       displayHeader();
-      console.log(user);
+
+      //check if they have set the username
       if (user === undefined) {
         console.log("display username input");
         let chatDiv = document.getElementById("chats-wrapper");
         displayUsernameInput();
       } else {
-        for (var room in rooms) {
-          console.log(room);
-          createChat(rooms[room]);
-        }
-        //createChat(2);
         //clear any error message
         let inputDiv = document.getElementById("error-wrapper");
         inputDiv.innerHTML = "";
+        let listDiv = document.getElementById("lists");
+        listDiv.innerHTML = "";
+        displayCreateRoom();
+        displayAvaliableRooms();
+        //create the chats from the rooms array
+        for (var room in rooms) {
+          createChat(rooms[room]);
+        }
       }
+    }
+
+    function displayCreateRoom() {
+      //get lists div
+      let listGrid = document.getElementById("lists");
+      //create wrapper
+      let createRoomFormWrapper = document.createElement("div");
+      //create label
+      let chatRoomLabel = document.createElement("h2");
+      let chatRoomLabelText = document.createTextNode("Create Room:");
+      chatRoomLabel.appendChild(chatRoomLabelText);
+      createRoomFormWrapper.appendChild(chatRoomLabel);
+      //create form
+      let createRoomForm = document.createElement("form");
+      createRoomForm.id = "create-room-form";
+      //create the input
+      let createRoomInput = document.createElement("input");
+      createRoomInput.id = "room-name";
+      createRoomInput.type = "text";
+      createRoomInput.name = "room-name";
+      createRoomInput.value = "";
+      createRoomInput.placeholder = "Room Name";
+      createRoomForm.appendChild(createRoomInput);
+
+      let createRoomSubmit = document.createElement("button");
+      createRoomSubmit.type = "button";
+      createRoomSubmit.name = "button";
+      createRoomSubmit.onclick = function() {
+        let roomName = document.getElementById("room-name").value;
+        rooms.push(roomName);
+        display();
+      };
+      createRoomForm.appendChild(createRoomSubmit);
+      createRoomFormWrapper.appendChild(createRoomForm);
+      listGrid.appendChild(createRoomFormWrapper);
+    }
+
+    function displayAvaliableRooms() {
+      //get lists div
+      let listGrid = document.getElementById("lists");
+      //wrap the form in a div
+      let joinRoomFormWrapper = document.createElement("div");
+      //create label
+      let chatRoomLabel = document.createElement("h2");
+      let chatRoomLabelText = document.createTextNode("Rooms:");
+      chatRoomLabel.appendChild(chatRoomLabelText);
+      joinRoomFormWrapper.appendChild(chatRoomLabel);
+
+      //create the form
+      let joinRoomForm = document.createElement("form");
+      joinRoomForm.id = "join-room-form";
+      //create the select
+      let joinRoomSelect = document.createElement("select");
+      joinRoomSelect.id = "join-room-select";
+
+      //create the options
+      for (var r in rooms) {
+        var opt = rooms[r];
+        var option = document.createElement("option");
+        var optionText = document.createTextNode(opt);
+        option.value = opt;
+        option.appendChild(optionText);
+        joinRoomSelect.appendChild(option);
+      }
+
+      //add select
+      joinRoomForm.appendChild(joinRoomSelect);
+
+      //create enter room button
+      let joinRoomEnter = document.createElement("button");
+      joinRoomEnter.type = "button";
+      joinRoomEnter.name = "button";
+      joinRoomEnter.onclick = function() {
+        let val = document.getElementById("join-room-select").value;
+        let thisChat = document.getElementById("chat-single-" + val);
+        thisChat.style.display = "";
+      };
+      //add enter room button
+      joinRoomForm.appendChild(joinRoomEnter);
+
+      //create leave room button
+      let joinRoomLeave = document.createElement("button");
+      joinRoomLeave.type = "button";
+      joinRoomLeave.name = "button";
+      joinRoomLeave.onclick = function() {
+        let val = document.getElementById("join-room-select").value;
+        let thisChat = document.getElementById("chat-single-" + val);
+        thisChat.style.display = "none";
+      };
+      //add leave room button
+      joinRoomForm.appendChild(joinRoomLeave);
+
+      joinRoomFormWrapper.appendChild(joinRoomForm);
+      listGrid.appendChild(joinRoomFormWrapper);
     }
 
     function displayUsernameInput() {
@@ -147,17 +249,26 @@
     }
 
     function createChat(chatNumber) {
-      //console.log(chatNumber);
+      console.log("creating chat: " + chatNumber);
       //get chat div
       let chatBox = document.getElementById("chats-wrapper");
       let chatDiv = document.createElement("div");
-      chatDiv.id = "chat-wrapper";
-      chatDiv.style.display = "";
+      chatDiv.id = "chat-single-" + chatNumber;
+      chatDiv.classList = "chat-box";
+      chatDiv.style.display = "none";
 
       //add the Chat Number
+      let chatNumHead = document.createElement("div");
+      chatNumHead.classList.add("chat-header");
+      let chatHeadh2 = document.createElement("h3");
+      let chatHeadText = document.createTextNode(chatNumber);
+      chatHeadh2.appendChild(chatHeadText);
+      chatNumHead.appendChild(chatHeadh2);
+      chatDiv.appendChild(chatNumHead);
 
       //create padding for chat
       let chatPadding = document.createElement("div");
+      chatPadding.id = "chat-wrapper";
       chatPadding.style.padding = "15px";
 
       //create container for messages
@@ -182,11 +293,13 @@
 
       //create submit for chat
       let chatSubmit = document.createElement("button");
-      chatSubmit.type = "button";
+      chatSubmit.type = "submit";
       chatSubmit.name = "button";
       chatSubmit.value = "Send";
       chatSubmit.onclick = function sendMessage() {
-        var msg = document.getElementById("message" + chatNumber).value;
+        var elem = document.getElementById("message" + chatNumber);
+        var msg = elem.value;
+        elem.value = "";
         if (msg) {
           socket.emit("msg", { message: msg, user: user, chatNum: chatNumber });
         }
