@@ -10,7 +10,7 @@
       <div id="left-sidebar"></div>
       <div id="page-content">
         <div id="username-input"></div>
-        <div id="chat-wrapper"></div>
+        <div id="chats-wrapper"></div>
       </div>
       <div id="right-sidebar"></div>
     </div>
@@ -19,7 +19,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     var socket = io();
-
+    let rooms = ["1", "2"];
     var user;
     console.log(user);
 
@@ -39,10 +39,10 @@
     socket.on("newmsg", function(data) {
       if (user) {
         //clear input
-        let h = (document.getElementById("message").value = "");
-
+        //let h = (document.getElementById("message").value = "");
+        console.log(data);
         //get container
-        let con = document.getElementById("message-container");
+        let con = document.getElementById("message-container" + data.chatNum);
 
         //create message
         let temp = document.createElement("div");
@@ -76,15 +76,17 @@
 
     function display() {
       displayHeader();
-      console.log("here");
+      console.log(user);
       if (user === undefined) {
-        //console.log("display username input");
-        let chatDiv = document.getElementById("chat-wrapper");
-        chatDiv.style.display = "none";
+        console.log("display username input");
+        let chatDiv = document.getElementById("chats-wrapper");
         displayUsernameInput();
       } else {
-        //console.log("display chat");
-        displayChat();
+        for (var room in rooms) {
+          console.log(room);
+          createChat(rooms[room]);
+        }
+        //createChat(2);
         //clear any error message
         let inputDiv = document.getElementById("error-wrapper");
         inputDiv.innerHTML = "";
@@ -144,10 +146,15 @@
       inputDiv.appendChild(formDiv);
     }
 
-    function displayChat() {
+    function createChat(chatNumber) {
+      //console.log(chatNumber);
       //get chat div
-      let chatDiv = document.getElementById("chat-wrapper");
+      let chatBox = document.getElementById("chats-wrapper");
+      let chatDiv = document.createElement("div");
+      chatDiv.id = "chat-wrapper";
       chatDiv.style.display = "";
+
+      //add the Chat Number
 
       //create padding for chat
       let chatPadding = document.createElement("div");
@@ -155,7 +162,8 @@
 
       //create container for messages
       let chatContainer = document.createElement("div");
-      chatContainer.id = "message-container";
+      chatContainer.id = "message-container" + chatNumber;
+      chatContainer.classList = "message-container";
       chatContainer.clientHeight = "400px";
       chatPadding.appendChild(chatContainer);
 
@@ -169,7 +177,7 @@
       //create text input
       let chatText = document.createElement("input");
       chatText.type = "text";
-      chatText.id = "message";
+      chatText.id = "message" + chatNumber;
       chatInput.appendChild(chatText);
 
       //create submit for chat
@@ -178,9 +186,9 @@
       chatSubmit.name = "button";
       chatSubmit.value = "Send";
       chatSubmit.onclick = function sendMessage() {
-        var msg = document.getElementById("message").value;
+        var msg = document.getElementById("message" + chatNumber).value;
         if (msg) {
-          socket.emit("msg", { message: msg, user: user });
+          socket.emit("msg", { message: msg, user: user, chatNum: chatNumber });
         }
       };
 
@@ -193,6 +201,9 @@
 
       //add padding to chat
       chatDiv.appendChild(chatPadding);
+
+      //add chat to chat box
+      chatBox.appendChild(chatDiv);
 
       //document.body.innerHTML =
       //  '<input type = "text" id = "message">\
