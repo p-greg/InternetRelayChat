@@ -3,6 +3,7 @@ var app = express();
 var server = require("http").Server(app);
 var io = require("socket.io")(server);
 var path = require("path");
+var rooms = [];
 
 app.use(express.static(path.join(__dirname + "/public")));
 
@@ -21,7 +22,7 @@ io.on("connection", function(socket) {
     if (users.indexOf(data) < 0) {
       console.log("Setting Username: " + data);
       users.push(data);
-      socket.emit("userSet", { username: data });
+      socket.emit("userSet", { username: data, avaliableRooms: rooms });
       console.log(users);
     } else {
       socket.emit(

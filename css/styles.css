@@ -67,7 +67,25 @@
   border-radius: 10px;
 }
 
+.chat-box {
+  margin-top: 20px;
+}
+
 #chat-single-msg {
   padding: 5px;
   margin-bottom: 5px;
+}
+
+#join-room-form button {
+  width: 100px;
+  height: 25px;
+}
+
+#join-room-select {
+  width: 100px;
+}
+
+#create-room-form button {
+  width: 100px;
+  height: 25px;
 }
