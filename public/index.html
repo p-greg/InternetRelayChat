@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="site-header"></div>
+    <div id="page-layout">
+      <div id="left-sidebar"></div>
+      <div id="page-content">
+        <div id="username-input"></div>
+        <div id="chat-wrapper"></div>
+      </div>
+      <div id="right-sidebar"></div>
+    </div>
+  </body>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+
+    var user;
+    console.log(user);
+
+    socket.on("userExists", function(data) {
+      document.getElementById("error-wrapper").innerHTML = data;
+    });
+
+    socket.on("userSet", function(data) {
+      user = data.username;
+      var userNameInput = document.getElementById("username-input");
+      userNameInput.style.display = "none";
+      var errorMessage = document.getElementById("error-wrapper");
+      errorMessage.style.display = "none";
+      display();
+    });
+
+    socket.on("newmsg", function(data) {
+      if (user) {
+        //clear input
+        let h = (document.getElementById("message").value = "");
+
+        //get container
+        let con = document.getElementById("message-container");
+
+        //create message
+        let temp = document.createElement("div");
+        let box = document.createElement("div");
+        box.id = "box";
+
+        let chatText = document.createTextNode(data.user + ": " + data.message);
+        let chatWrap = document.createElement("div");
+        chatWrap.id = "chat-single-msg";
+
+        chatWrap.style.borderRadius = "3px";
+        chatWrap.style.display = "inline-block";
+
+        if (data.user === user) {
+          console.log("my message");
+          chatWrap.style.background = "#147efb";
+          box.style.textAlign = "right";
+        } else {
+          console.log("someone else");
+          chatWrap.style.background = "#53d769";
+        }
+
+        temp.appendChild(chatText);
+        chatWrap.appendChild(temp);
+        box.appendChild(chatWrap);
+        con.appendChild(box);
+
+        con.scrollTop = con.scrollHeight;
+      }
+    });
+
+    function display() {
+      displayHeader();
+      console.log("here");
+      if (user === undefined) {
+        //console.log("display username input");
+        let chatDiv = document.getElementById("chat-wrapper");
+        chatDiv.style.display = "none";
+        displayUsernameInput();
+      } else {
+        //console.log("display chat");
+        displayChat();
+        //clear any error message
+        let inputDiv = document.getElementById("error-wrapper");
+        inputDiv.innerHTML = "";
+      }
+    }
+
+    function displayUsernameInput() {
+      //get the div
+      let inputDiv = document.getElementById("username-input");
+
+      //create Welcome header
+      let welcomeDiv = document.createElement("div");
+      welcomeDiv.id = "welcomeHeader";
+      let welcomeWrap = document.createElement("h2");
+      let welcomeText = document.createTextNode("Welcome to my app!");
+      welcomeWrap.appendChild(welcomeText);
+      welcomeDiv.appendChild(welcomeWrap);
+      inputDiv.appendChild(welcomeDiv);
+
+      //create wrapper for div
+      let formDiv = document.createElement("div");
+      formDiv.id = "username-form";
+      formDiv.classList.add("username-form");
+
+      //create error div
+      let errorDiv = document.createElement("div");
+      errorDiv.id = "error-wrapper";
+      inputDiv.appendChild(errorDiv);
+
+      let wrap = document.createElement("div");
+      wrap.id = "username-input-wrap";
+
+      //create input
+      let formInput = document.createElement("input");
+      formInput.id = "name";
+      formInput.type = "text";
+      formInput.name = "name";
+      formInput.value = "";
+      formInput.placeholder = "Enter name";
+      wrap.appendChild(formInput);
+
+      //create submit button
+      let formSubmit = document.createElement("button");
+      formSubmit.type = "button";
+      formSubmit.name = "button";
+      formSubmit.onclick = function setUsername() {
+        socket.emit("setUsername", document.getElementById("name").value);
+      };
+
+      //create text for submit
+      let submitText = document.createTextNode("Submit");
+      formSubmit.appendChild(submitText);
+
+      wrap.appendChild(formSubmit);
+      formDiv.appendChild(wrap);
+      //append idv
+      inputDiv.appendChild(formDiv);
+    }
+
+    function displayChat() {
+      //get chat div
+      let chatDiv = document.getElementById("chat-wrapper");
+      chatDiv.style.display = "";
+
+      //create padding for chat
+      let chatPadding = document.createElement("div");
+      chatPadding.style.padding = "15px";
+
+      //create container for messages
+      let chatContainer = document.createElement("div");
+      chatContainer.id = "message-container";
+      chatContainer.clientHeight = "400px";
+      chatPadding.appendChild(chatContainer);
+
+      //create container for input
+      let chatInput = document.createElement("div");
+      chatInput.style.display = "grid";
+      chatInput.style.marginTop = "5px";
+      chatInput.style.gridTemplateColumns = "auto 100px";
+      chatInput.style.gridColumnGap = "10px";
+
+      //create text input
+      let chatText = document.createElement("input");
+      chatText.type = "text";
+      chatText.id = "message";
+      chatInput.appendChild(chatText);
+
+      //create submit for chat
+      let chatSubmit = document.createElement("button");
+      chatSubmit.type = "button";
+      chatSubmit.name = "button";
+      chatSubmit.value = "Send";
+      chatSubmit.onclick = function sendMessage() {
+        var msg = document.getElementById("message").value;
+        if (msg) {
+          socket.emit("msg", { message: msg, user: user });
+        }
+      };
+
+      //create text for button
+      let buttonText = document.createTextNode("Send");
+      chatSubmit.appendChild(buttonText);
+
+      chatInput.appendChild(chatSubmit);
+      chatPadding.appendChild(chatInput);
+
+      //add padding to chat
+      chatDiv.appendChild(chatPadding);
+
+      //document.body.innerHTML =
+      //  '<input type = "text" id = "message">\
+      //   <button type = "button" name = "button" onclick = "sendMessage()">Send</button>\
+      //   <div id = "message-container"></div>';
+    }
+
+    function displayHeader() {
+      //get header div
+      var headerDiv = document.getElementById("site-header");
+      headerDiv.style.display = "flex";
+      headerDiv.style.alignItems = "center";
+      headerDiv.style.justifyContent = "center";
+      //clear the header
+      headerDiv.innerHTML = "";
+      //create header wrapper
+      var headerWrapper = document.createElement("div");
+      headerWrapper.id = "header-wrapper";
+      headerWrapper.style.display = "flex";
+      headerWrapper.style.alignItems = "center";
+      headerWrapper.innerHTML = "";
+      //create a header title
+      var headerTitle = document.createTextNode("Internet Relay Chat");
+      //add text to title
+      headerWrapper.appendChild(headerTitle);
+      //add title to header
+      headerDiv.appendChild(headerWrapper);
+    }
+
+    display();
+  </script>
+</html>
