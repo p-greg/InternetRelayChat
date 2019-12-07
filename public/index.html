@@ -24,6 +24,31 @@
     let rooms = [];
     var user;
 
+    socket.on("connection_failed", function() {
+      console.log("connection failed");
+      document.write("I am sorry. The server is having troubles.");
+    });
+
+    socket.on("connect_error", function() {
+      console.log("connect error");
+      document.write("I am sorry. The server is having troubles.");
+    });
+
+    socket.on("reconnect_failed", function() {
+      console.log("reconnect failure");
+      document.write("I am sorry. The server is having troubles.");
+    });
+
+    socket.on("connect_error", function() {
+      console.log("connect error");
+      document.write("I am sorry. The server is having troubles.");
+    });
+
+    socket.on("connect_timeout", function() {
+      console.log("connection timeout");
+      document.write("I am sorry. The server is having troubles.");
+    });
+
     socket.on("userExists", function(data) {
       document.getElementById("error-wrapper").innerHTML = data;
     });
